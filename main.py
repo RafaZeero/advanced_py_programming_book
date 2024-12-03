@@ -1,6 +1,7 @@
+from random import uniform
 import matplotlib
-from matplotlib import pyplot as plt
 from matplotlib import animation
+from matplotlib import pyplot as plt
 
 matplotlib.use("TkAgg")
 
@@ -20,13 +21,15 @@ class ParticleSimulator:
         timestep = 0.00001
         nsteps = int(dt / timestep)
 
-        for i in range(nsteps):
+        for _ in range(nsteps):
             for p in self.particles:
                 norm = (p.x**2 + p.y**2) ** 0.5
                 v_x = -p.y / norm
                 v_y = p.x / norm
+
                 d_x = timestep * p.ang_vel * v_x
                 d_y = timestep * p.ang_vel * v_y
+
                 p.x += d_x
                 p.y += d_y
 
@@ -38,20 +41,26 @@ def visualize(simulator: ParticleSimulator):
     ax.set_aspect("equal")
     (line,) = ax.plot(X, Y, "ro")
 
+    # Axis limits
     plt.xlim(-1, 1)
     plt.ylim(-1, 1)
 
+    # It will be run when the animation starts
     def init():
         line.set_data([], [])
         return (line,)
 
     def animate(i):
+        # We let the particle evolve for 0.1 time units
         simulator.evolve(0.01)
+
         X = [p.x for p in simulator.particles]
         Y = [p.y for p in simulator.particles]
+
         line.set_data(X, Y)
         return (line,)
 
+    # Call the animate function each 10 ms
     anim = animation.FuncAnimation(
         fig, animate, init_func=init, frames=100, interval=10, blit=True
     )
@@ -66,10 +75,6 @@ def test_visualize():
     ]
     simulator = ParticleSimulator(particles)
     visualize(simulator)
-
-
-# if __name__ == "__main__":
-#     test_visualize()
 
 
 def test_evolve():
@@ -93,5 +98,18 @@ def test_evolve():
     assert fequal(p2.y, -0.365227)
 
 
-if __name__ == "__main__":
-    test_evolve()
+def benchmark():
+    particles = [
+        Particle(uniform(-1.0, 1.0), uniform(-1.0, 1.0), uniform(-1.0, 1.0))
+        for _ in range(10)
+    ]
+    simulator = ParticleSimulator(particles)
+    simulator.evolve(0.1)
+
+
+# if __name__ == "__main__":
+#     test_visualize()
+
+
+# if __name__ == "__main__":
+#     test_evolve()
